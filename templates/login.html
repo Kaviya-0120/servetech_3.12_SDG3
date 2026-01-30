@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Use specific wrapper for login page to enable glass background -->
+<div class="glass-bg">
+    <div class="glass-card">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🏥</div>
+            <h2 style="color: var(--primary-dark); margin: 0;">Admin Portal</h2>
+            <p style="color: var(--text-light);">Secure Access for Hospital Staff</p>
+        </div>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="text" id="email" name="email" required placeholder="admin@gmail.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn" style="width: 100%; margin-top: 1rem; font-size: 1.1rem;"> Log In</button>
+        </form>
+
+        <div style="margin-top: 2rem; text-align: center; font-size: 0.9em; opacity: 0.7;">
+            <p>Demo Credentials: <b>admin@gmail.com</b> / <b>admin</b></p>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Override main content padding/margin for this specific page if needed, 
+       but we handled it in CSS with .main-content changes or we can force it here */
+    .main-content {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .sidebar,
+    .mobile-toggle {
+        display: none !important;
+        /* Hide sidebar on login page */
+    }
+</style>
+{% endblock %}

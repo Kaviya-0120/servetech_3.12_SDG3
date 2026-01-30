@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            New Patient Registration
+        </div>
+        <p style="margin-bottom: 2rem; color: #7f8c8d;">
+            Please fill out the form below to receive immediate department recommendation and priority queuing.
+        </p>
+
+        <form action="{{ url_for('submit_patient') }}" method="POST">
+            <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin:0;">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" required placeholder="Ex. John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Age</label>
+                    <input type="number" name="age" required min="0" max="120">
+                </div>
+            </div>
+
+            <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin:0;">
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select name="gender" required>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Region</label>
+                    <select name="location" required>
+                        <option value="Urban">Urban City</option>
+                        <option value="Rural">Rural Area</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Distance (km)</label>
+                    <input type="number" name="distance" step="0.1" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Main Symptoms</label>
+                <textarea name="symptom" rows="3" required placeholder="Describe what you are feeling..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Severity (1 - 10)</label>
+                <input type="number" name="severity" min="1" max="10" required placeholder="10 being extreme pain">
+            </div>
+
+            <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin:0;">
+                <div class="form-group">
+                    <label>Chronic Illness?</label>
+                    <select name="chronic_illness">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Vulnerable Group?</label>
+                    <select name="vulnerable_group">
+                        <option value="no">None</option>
+                        <option value="pregnancy">Pregnancy</option>
+                        <option value="elderly">Elderly (>65)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">Process Registration</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

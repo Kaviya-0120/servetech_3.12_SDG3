@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 style="margin-bottom: 2rem;">Priority Queue</h1>
+
+<div class="card">
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Wait #</th>
+                    <th>Patient Name</th>
+                    <th>Dept Recommendation</th>
+                    <th>Urgency Score</th>
+                    <th>Priority</th>
+                    <th>Condition</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in patients %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>
+                        <strong>{{ p['name'] }}</strong><br>
+                        <small style="color: #999;">{{ p['age'] }}y / {{ p['gender'] }}</small>
+                    </td>
+                    <td>{{ p['dept_name'] }}</td>
+                    <td>{{ "%.1f"|format(p['priority_score']) }}</td>
+                    <td><span class="badge badge-{{ p['priority_level']|lower }}">{{ p['priority_level'] }}</span></td>
+                    <td><small>{{ p['symptom'][:50] }}...</small></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center;">Queue is empty.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

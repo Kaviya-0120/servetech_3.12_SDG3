@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        Doctor Dashboard - {{ doctor_name }}
+        <span style="float:right; font-size: 0.8em; color: gray;">Department Queue</span>
+    </div>
+
+    {% if patients %}
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Issue</th>
+                <th>Priority</th>
+                <th>Urgency Score</th>
+                <th>Wait Time (Est)</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for patient in patients %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ patient['name'] }}</td>
+                <td>{{ patient['age'] }}</td>
+                <td>{{ patient['symptom'] }}</td>
+                <td><span class="badge badge-{{ patient['priority_level']|lower }}">{{ patient['priority_level']
+                        }}</span></td>
+                <td>{{ patient['priority_score'] }}</td>
+                <td>{{ loop.index * 15 }} mins</td>
+                <td><button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Call</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No patients in the queue.</p>
+    {% endif %}
+</div>
+{% endblock %}
