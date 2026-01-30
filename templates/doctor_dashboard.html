@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Dashboard - {{ department }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="dashboard-header">
+        <div class="header-info">
+            <h1><i class="fas fa-user-md"></i> {{ doctor_name }}</h1>
+            <p class="department-name">{{ department }} Department</p>
+        </div>
+        <div class="header-stats">
+            <div class="stat-card">
+                <i class="fas fa-users"></i>
+                <div class="stat-info">
+                    <span class="stat-number">{{ patients|length }}</span>
+                    <span class="stat-label">Patients in Queue</span>
+                </div>
+            </div>
+            <div class="refresh-btn" onclick="refreshQueue()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </div>
+        </div>
+    </div>
+
+    <div class="queue-container">
+        <div class="queue-header">
+            <h2><i class="fas fa-list"></i> Patient Queue - {{ department }}</h2>
+            <div class="queue-filters">
+                <select id="priorityFilter" onchange="filterPatients()">
+                    <option value="">All Priorities</option>
+                    <option value="High">High Priority</option>
+                    <option value="Medium">Medium Priority</option>
+                    <option value="Low">Low Priority</option>
+                </select>
+            </div>
+        </div>
+
+        {% if patients %}
+        <div class="patients-grid" id="patientsGrid">
+            {% for patient in patients %}
+            <div class="patient-card" data-priority="{{ patient[4] }}">
+                <div class="patient-header">
+                    <div class="patient-info">
+                        <h3><i class="fas fa-user"></i> {{ patient[1] }}</h3>
+                        <span class="patient-age">Age: {{ patient[2] }}</span>
+                    </div>
+                    <div class="priority-badge priority-{{ patient[4].lower() }}">
+                        {{ patient[4] }}
+                    </div>
+                </div>
+                
+                <div class="patient-details">
+                    <div class="detail-item">
+                        <i class="fas fa-stethoscope"></i>
+                        <span class="detail-label">Issue:</span>
+                        <span class="detail-value">{{ patient[3] }}</span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span class="detail-label">Urgency:</span>
+                            <span class="detail-value urgency-score">{{ "%.1f"|format(patient[5]) }}</span>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <i class="fas fa-list-ol"></i>
+                            <span class="detail-label">Position:</span>
+                            <span class="detail-value queue-position">#{{ patient[6] }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <i class="fas fa-clock"></i>
+                            <span class="detail-label">Registered:</span>
+                            <span class="detail-value">{{ patient[7].split(' ')[1].split('.')[0] if patient[7] else 'N/A' }}</span>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <i class="fas fa-route"></i>
+                            <span class="detail-label">Distance:</span>
+                            <span class="detail-value">{{ patient[8] }} km</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="patient-actions">
+                    <button class="action-btn consult-btn" onclick="startConsultation({{ patient[0] }})">
+                        <i class="fas fa-video"></i> Start Consultation
+                    </button>
+                    <button class="action-btn notes-btn" onclick="addNotes({{ patient[0] }})">
+                        <i class="fas fa-notes-medical"></i> Add Notes
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-queue">
+            <i class="fas fa-clipboard-list"></i>
+            <h3>No patients in queue</h3>
+            <p>Your {{ department }} queue is currently empty.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Estimated Wait Times -->
+    <div class="wait-times-section">
+        <h3><i class="fas fa-hourglass-half"></i> Estimated Wait Times</h3>
+        <div class="wait-times-grid">
+            <div class="wait-time-card high">
+                <span class="priority-label">High Priority</span>
+                <span class="wait-time">5-10 min</span>
+            </div>
+            <div class="wait-time-card medium">
+                <span class="priority-label">Medium Priority</span>
+                <span class="wait-time">15-30 min</span>
+            </div>
+            <div class="wait-time-card low">
+                <span class="priority-label">Low Priority</span>
+                <span class="wait-time">30-60 min</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Consultation Modal -->
+<div id="consultationModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-video"></i> Start Consultation</h3>
+            <span class="close" onclick="closeConsultationModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Starting video consultation with patient...</p>
+            <div class="consultation-info">
+                <div class="info-item">
+                    <i class="fas fa-info-circle"></i>
+                    <span>This is a demo. In production, this would integrate with video calling platforms.</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeConsultationModal()" class="close-btn">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Notes Modal -->
+<div id="notesModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-notes-medical"></i> Patient Notes</h3>
+            <span class="close" onclick="closeNotesModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <textarea id="patientNotes" placeholder="Add consultation notes..." rows="6"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button onclick="saveNotes()" class="save-btn">Save Notes</button>
+            <button onclick="closeNotesModal()" class="close-btn">Cancel</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentPatientId = null;
+
+function refreshQueue() {
+    location.reload();
+}
+
+function filterPatients() {
+    const filter = document.getElementById('priorityFilter').value;
+    const patientCards = document.querySelectorAll('.patient-card');
+    
+    patientCards.forEach(card => {
+        const priority = card.getAttribute('data-priority');
+        if (filter === '' || priority === filter) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function startConsultation(patientId) {
+    currentPatientId = patientId;
+    document.getElementById('consultationModal').style.display = 'flex';
+}
+
+function closeConsultationModal() {
+    document.getElementById('consultationModal').style.display = 'none';
+    currentPatientId = null;
+}
+
+function addNotes(patientId) {
+    currentPatientId = patientId;
+    document.getElementById('notesModal').style.display = 'flex';
+}
+
+function closeNotesModal() {
+    document.getElementById('notesModal').style.display = 'none';
+    document.getElementById('patientNotes').value = '';
+    currentPatientId = null;
+}
+
+function saveNotes() {
+    const notes = document.getElementById('patientNotes').value;
+    if (notes.trim()) {
+        // In production, this would save to database
+        alert('Notes saved successfully!');
+        closeNotesModal();
+    } else {
+        alert('Please enter some notes before saving.');
+    }
+}
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+    // In production, use AJAX to update queue without full page reload
+    console.log('Auto-refresh triggered');
+}, 30000);
+
+// Close modals when clicking outside
+window.addEventListener('click', function(e) {
+    const consultationModal = document.getElementById('consultationModal');
+    const notesModal = document.getElementById('notesModal');
+    
+    if (e.target === consultationModal) {
+        closeConsultationModal();
+    }
+    if (e.target === notesModal) {
+        closeNotesModal();
+    }
+});
+</script>
+{% endblock %}
