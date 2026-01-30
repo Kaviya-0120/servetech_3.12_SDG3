@@ -1,13 +1,24 @@
-from flask import Flask, render_template_string, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template_string, request, jsonify, session, redirect, url_for, send_file
 import sqlite3
 import random
 import string
 from datetime import datetime, timedelta
 import json
 import hashlib
+from report_generator import ReportGenerator
+from translations import get_translation, get_supported_languages
+from multilingual_templates import MULTILINGUAL_PATIENT_REGISTER_TEMPLATE, MULTILINGUAL_PATIENT_STATUS_TEMPLATE
 
 app = Flask(__name__)
 app.secret_key = 'hospital_grade_secure_key_2024'
+
+def get_user_language():
+    """Get user's selected language from session or default to English"""
+    return session.get('language', 'en')
+
+def t(key, default=None):
+    """Translation helper function"""
+    return get_translation(get_user_language(), key, default)
 
 def init_hospital_db():
     """Initialize hospital-grade database"""
@@ -62,6 +73,16 @@ def init_hospital_db():
             status TEXT DEFAULT 'active',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (patient_id) REFERENCES patients (id)
+        )
+    ''')
+    
+    # System settings table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS system_settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            setting_key TEXT UNIQUE NOT NULL,
+            setting_value TEXT NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     
@@ -134,25 +155,41 @@ def determine_department(symptom_text):
     
     return 'General Medicine'  # Default
 
+def render_patient_template(template_string, **kwargs):
+    """Render template with translation support for patient pages"""
+    # Add translation function and language info to template context
+    kwargs['t'] = t
+    kwargs['session'] = session
+    kwargs['get_supported_languages'] = get_supported_languages
+    return render_template_string(template_string, **kwargs)
+
+@app.route('/set_language/<lang_code>')
+def set_language(lang_code):
+    """Set user language preference"""
+    supported_languages = get_supported_languages()
+    if lang_code in supported_languages:
+        session['language'] = lang_code
+    return redirect(request.referrer or '/')
+
 @app.route('/')
 def home():
     """Hospital landing page"""
-    return render_template_string(HOSPITAL_LANDING_TEMPLATE)
+    return render_patient_template(HOSPITAL_LANDING_TEMPLATE)
 
 @app.route('/patient')
 def patient_portal():
     """Patient portal"""
-    return render_template_string(PATIENT_PORTAL_TEMPLATE)
+    return render_patient_template(PATIENT_PORTAL_TEMPLATE)
 
 @app.route('/patient/register')
 def patient_register():
     """Enhanced patient registration"""
-    return render_template_string(ENHANCED_PATIENT_REGISTER_TEMPLATE)
+    return render_patient_template(MULTILINGUAL_PATIENT_REGISTER_TEMPLATE)
 
 @app.route('/patient/status')
 def patient_status():
     """Patient status check page"""
-    return render_template_string(PATIENT_STATUS_TEMPLATE)
+    return render_patient_template(MULTILINGUAL_PATIENT_STATUS_TEMPLATE)
 
 @app.route('/api/register_patient', methods=['POST'])
 def register_patient():
@@ -409,6 +446,7 @@ def generate_patient_report(patient_id):
         
         # Generate report data
         report_data = {
+            'id': patient_id,  # Add patient ID for download functionality
             'patient_name': patient[2],
             'registration_id': patient[1],
             'age': patient[3],
@@ -643,6 +681,220 @@ def get_admin_settings():
         'emergency_threshold': system_settings.get('emergency_threshold', '80')
     })
 
+@app.route('/api/admin/download_report/<int:patient_id>')
+def download_patient_report(patient_id):
+    """Download patient report as PDF"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        conn = sqlite3.connect('hospital_system.db')
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT * FROM patients WHERE id = ?
+        ''', (patient_id,))
+        
+        patient = cursor.fetchone()
+        conn.close()
+        
+        if not patient:
+            return jsonify({'error': 'Patient not found'}), 404
+        
+        # Prepare patient data for report
+        patient_data = {
+            'patient_name': patient[2],
+            'registration_id': patient[1],
+            'age': patient[3],
+            'gender': patient[4],
+            'phone': patient[5],
+            'symptom': patient[7],
+            'severity': patient[8],
+            'department': patient[10],
+            'risk_score': patient[11],
+            'status': patient[12],
+            'created_at': patient[15],
+            'appointment_time': patient[13],
+            'is_emergency': patient[9]
+        }
+        
+        # Generate PDF report
+        report_generator = ReportGenerator()
+        pdf_buffer = report_generator.generate_patient_pdf_report(patient_data)
+        
+        return send_file(
+            pdf_buffer,
+            as_attachment=True,
+            download_name=f'patient_report_{patient_data["registration_id"]}.pdf',
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/download_daily_report')
+def download_daily_report():
+    """Download daily report as PDF"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        conn = sqlite3.connect('hospital_system.db')
+        cursor = conn.cursor()
+        
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        # Generate daily report data
+        cursor.execute("SELECT COUNT(*) FROM patients WHERE DATE(created_at) = ?", (today,))
+        total_patients = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM patients WHERE DATE(created_at) = ? AND risk_score >= 80", (today,))
+        high_risk = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM patients WHERE DATE(created_at) = ? AND status = 'confirmed'", (today,))
+        confirmed = cursor.fetchone()[0]
+        
+        cursor.execute('''
+            SELECT department, COUNT(*) 
+            FROM patients 
+            WHERE DATE(created_at) = ? 
+            GROUP BY department
+        ''', (today,))
+        dept_breakdown = cursor.fetchall()
+        
+        conn.close()
+        
+        report_data = {
+            'date': today,
+            'total_patients': total_patients,
+            'high_risk_patients': high_risk,
+            'confirmed_appointments': confirmed,
+            'department_breakdown': dict(dept_breakdown),
+            'generated_at': datetime.now().isoformat()
+        }
+        
+        # Generate PDF report
+        report_generator = ReportGenerator()
+        pdf_buffer = report_generator.generate_daily_report_pdf(report_data)
+        
+        return send_file(
+            pdf_buffer,
+            as_attachment=True,
+            download_name=f'daily_report_{today}.pdf',
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/download_patients_excel')
+def download_patients_excel():
+    """Download all patients data as Excel"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        conn = sqlite3.connect('hospital_system.db')
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT registration_id, name, age, gender, phone, email, main_symptom, 
+                   severity, department, risk_score, status, created_at, is_emergency, appointment_time
+            FROM patients ORDER BY created_at DESC
+        ''')
+        
+        patients = cursor.fetchall()
+        conn.close()
+        
+        # Convert to list of dictionaries
+        patients_data = []
+        for p in patients:
+            patients_data.append({
+                'Registration ID': p[0],
+                'Name': p[1],
+                'Age': p[2],
+                'Gender': p[3],
+                'Phone': p[4],
+                'Email': p[5] or '',
+                'Primary Symptom': p[6],
+                'Severity': p[7],
+                'Department': p[8],
+                'Risk Score': p[9],
+                'Status': p[10],
+                'Registration Date': p[11],
+                'Emergency': 'Yes' if p[12] else 'No',
+                'Appointment Time': p[13] or 'Not Scheduled'
+            })
+        
+        # Generate Excel report
+        report_generator = ReportGenerator()
+        excel_buffer = report_generator.generate_patients_excel_report(patients_data)
+        
+        return send_file(
+            excel_buffer,
+            as_attachment=True,
+            download_name=f'patients_report_{datetime.now().strftime("%Y%m%d")}.xlsx',
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/download_daily_excel')
+def download_daily_excel():
+    """Download daily report as Excel"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        conn = sqlite3.connect('hospital_system.db')
+        cursor = conn.cursor()
+        
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        # Generate daily report data
+        cursor.execute("SELECT COUNT(*) FROM patients WHERE DATE(created_at) = ?", (today,))
+        total_patients = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM patients WHERE DATE(created_at) = ? AND risk_score >= 80", (today,))
+        high_risk = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM patients WHERE DATE(created_at) = ? AND status = 'confirmed'", (today,))
+        confirmed = cursor.fetchone()[0]
+        
+        cursor.execute('''
+            SELECT department, COUNT(*) 
+            FROM patients 
+            WHERE DATE(created_at) = ? 
+            GROUP BY department
+        ''', (today,))
+        dept_breakdown = cursor.fetchall()
+        
+        conn.close()
+        
+        report_data = {
+            'date': today,
+            'total_patients': total_patients,
+            'high_risk_patients': high_risk,
+            'confirmed_appointments': confirmed,
+            'department_breakdown': dict(dept_breakdown),
+            'generated_at': datetime.now().isoformat()
+        }
+        
+        # Generate Excel report
+        report_generator = ReportGenerator()
+        excel_buffer = report_generator.generate_daily_report_excel(report_data)
+        
+        return send_file(
+            excel_buffer,
+            as_attachment=True,
+            download_name=f'daily_report_{today}.xlsx',
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/admin/logout')
 def admin_logout():
     """Admin logout"""
@@ -652,11 +904,11 @@ def admin_logout():
 
 HOSPITAL_LANDING_TEMPLATE = '''
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ session.get('language', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediCare Hospital - Digital Healthcare Platform</title>
+    <title>{{ t('hospital_name') }} - {{ t('hospital_tagline') }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -676,6 +928,29 @@ HOSPITAL_LANDING_TEMPLATE = '''
             text-align: center;
             max-width: 600px;
             width: 90%;
+            position: relative;
+        }
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .lang-btn {
+            background: rgba(25, 118, 210, 0.1);
+            color: #1976d2;
+            border: 2px solid #1976d2;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .lang-btn:hover, .lang-btn.active {
+            background: #1976d2;
+            color: white;
         }
         .hospital-logo {
             font-size: 4rem;
@@ -728,24 +1003,30 @@ HOSPITAL_LANDING_TEMPLATE = '''
 </head>
 <body>
     <div class="hospital-container">
+        <div class="language-selector">
+            <a href="/set_language/en" class="lang-btn {{ 'active' if session.get('language', 'en') == 'en' else '' }}">EN</a>
+            <a href="/set_language/hi" class="lang-btn {{ 'active' if session.get('language') == 'hi' else '' }}">हिं</a>
+            <a href="/set_language/ta" class="lang-btn {{ 'active' if session.get('language') == 'ta' else '' }}">த</a>
+        </div>
+        
         <div class="hospital-logo">🏥</div>
-        <h1 class="hospital-name">MediCare Hospital</h1>
-        <p class="hospital-tagline">Advanced Digital Healthcare Platform</p>
+        <h1 class="hospital-name">{{ t('hospital_name') }}</h1>
+        <p class="hospital-tagline">{{ t('hospital_tagline') }}</p>
         
         <div class="access-buttons">
             <a href="/patient" class="access-btn">
                 <span>👤</span>
                 <div>
-                    <div>Patient Portal</div>
-                    <div style="font-size: 0.9rem; font-weight: normal; margin-top: 5px;">Book appointments & check status</div>
+                    <div>{{ t('patient_portal') }}</div>
+                    <div style="font-size: 0.9rem; font-weight: normal; margin-top: 5px;">{{ t('patient_portal_desc') }}</div>
                 </div>
             </a>
             
             <a href="/admin" class="access-btn admin">
                 <span>🛡️</span>
                 <div>
-                    <div>Admin Dashboard</div>
-                    <div style="font-size: 0.9rem; font-weight: normal; margin-top: 5px;">Hospital management system</div>
+                    <div>{{ t('admin_dashboard') }}</div>
+                    <div style="font-size: 0.9rem; font-weight: normal; margin-top: 5px;">{{ t('admin_dashboard_desc') }}</div>
                 </div>
             </a>
         </div>
@@ -756,11 +1037,11 @@ HOSPITAL_LANDING_TEMPLATE = '''
 
 PATIENT_PORTAL_TEMPLATE = '''
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ session.get('language', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Portal - MediCare Hospital</title>
+    <title>{{ t('patient_portal_title') }} - {{ t('hospital_name') }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -773,6 +1054,29 @@ PATIENT_PORTAL_TEMPLATE = '''
             text-align: center;
             margin-bottom: 40px;
             color: #1565c0;
+            position: relative;
+        }
+        .language-selector {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            gap: 8px;
+        }
+        .lang-btn {
+            background: rgba(25, 118, 210, 0.1);
+            color: #1976d2;
+            border: 2px solid #1976d2;
+            padding: 6px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .lang-btn:hover, .lang-btn.active {
+            background: #1976d2;
+            color: white;
         }
         .container {
             max-width: 800px;
@@ -823,27 +1127,32 @@ PATIENT_PORTAL_TEMPLATE = '''
 </head>
 <body>
     <div class="header">
-        <h1>👤 Patient Portal</h1>
-        <p>Welcome to MediCare Hospital Digital Platform</p>
+        <div class="language-selector">
+            <a href="/set_language/en" class="lang-btn {{ 'active' if session.get('language', 'en') == 'en' else '' }}">EN</a>
+            <a href="/set_language/hi" class="lang-btn {{ 'active' if session.get('language') == 'hi' else '' }}">हिं</a>
+            <a href="/set_language/ta" class="lang-btn {{ 'active' if session.get('language') == 'ta' else '' }}">த</a>
+        </div>
+        <h1>👤 {{ t('patient_portal_title') }}</h1>
+        <p>{{ t('patient_portal_welcome') }}</p>
     </div>
     
     <div class="container">
         <div class="options-grid">
             <a href="/patient/register" class="option-card">
                 <div class="option-icon">📝</div>
-                <div style="font-size: 1.6rem; font-weight: 600; color: #1565c0; margin-bottom: 15px;">Book New Appointment</div>
-                <div style="color: #546e7a;">Register for a new consultation with our medical experts</div>
+                <div style="font-size: 1.6rem; font-weight: 600; color: #1565c0; margin-bottom: 15px;">{{ t('book_appointment') }}</div>
+                <div style="color: #546e7a;">{{ t('book_appointment_desc') }}</div>
             </a>
             
             <a href="/patient/status" class="option-card">
                 <div class="option-icon">🔍</div>
-                <div style="font-size: 1.6rem; font-weight: 600; color: #1565c0; margin-bottom: 15px;">Check Appointment Status</div>
-                <div style="color: #546e7a;">View your appointment details and queue position</div>
+                <div style="font-size: 1.6rem; font-weight: 600; color: #1565c0; margin-bottom: 15px;">{{ t('check_status') }}</div>
+                <div style="color: #546e7a;">{{ t('check_status_desc') }}</div>
             </a>
         </div>
         
         <a href="/" class="back-btn" style="margin-top: 30px;">
-            ← Back to Home
+            ← {{ t('back_to_home') }}
         </a>
     </div>
 </body>
@@ -1995,9 +2304,14 @@ ENHANCED_ADMIN_DASHBOARD_TEMPLATE = '''
                 <h3 style="font-size: 1.4rem; color: #1565c0; font-weight: 600; display: flex; align-items: center; gap: 10px;">
                     <span>👥</span> Patient Management
                 </h3>
-                <button onclick="refreshPatients()" style="background: #1976d2; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
-                    Refresh Patients
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="downloadPatientsExcel()" style="background: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        📥 Download Excel
+                    </button>
+                    <button onclick="refreshPatients()" style="background: #1976d2; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                        Refresh Patients
+                    </button>
+                </div>
             </div>
             <div class="table-container">
                 <table class="patients-table">
@@ -2044,6 +2358,7 @@ ENHANCED_ADMIN_DASHBOARD_TEMPLATE = '''
             </div>
             <div style="display: flex; gap: 15px; justify-content: flex-end;">
                 <button onclick="closeReportModal()" style="background: #95a5a6; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer;">Close</button>
+                <button onclick="downloadReportExcel()" style="background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer;">📊 Download Excel</button>
                 <button onclick="downloadReport()" style="background: #2ecc71; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer;">📥 Download PDF</button>
             </div>
         </div>
@@ -2141,6 +2456,15 @@ ENHANCED_ADMIN_DASHBOARD_TEMPLATE = '''
         
         function refreshPatients() {
             loadPatients();
+        }
+        
+        function downloadPatientsExcel() {
+            const link = document.createElement('a');
+            link.href = '/api/admin/download_patients_excel';
+            link.download = `patients_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
         
         function openConfirmModal(patientId) {
@@ -2250,7 +2574,46 @@ ENHANCED_ADMIN_DASHBOARD_TEMPLATE = '''
         
         function downloadReport() {
             if (currentReportData) {
-                alert('PDF report download would be implemented in production. Report data: ' + JSON.stringify(currentReportData, null, 2));
+                // Extract patient ID from the report data
+                const patientId = currentReportData.id || currentReportData.patient_id;
+                if (patientId) {
+                    // Create a temporary link to trigger download
+                    const downloadUrl = `/api/admin/download_report/${patientId}`;
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = `patient_report_${currentReportData.registration_id}.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    alert('Unable to download report: Patient ID not found');
+                }
+            }
+        }
+        
+        function downloadReportExcel() {
+            if (currentReportData) {
+                // Create Excel data for single patient
+                const patientData = [{
+                    'Registration ID': currentReportData.registration_id,
+                    'Name': currentReportData.patient_name,
+                    'Age': currentReportData.age,
+                    'Gender': currentReportData.gender,
+                    'Phone': currentReportData.phone,
+                    'Primary Symptom': currentReportData.symptom,
+                    'Severity': currentReportData.severity,
+                    'Department': currentReportData.department,
+                    'Risk Score': currentReportData.risk_score,
+                    'Status': currentReportData.status,
+                    'Registration Date': currentReportData.created_at,
+                    'Emergency': currentReportData.is_emergency ? 'Yes' : 'No',
+                    'Appointment Time': currentReportData.appointment_time || 'Not Scheduled'
+                }];
+                
+                // For now, show alert with data (in production, would generate Excel)
+                alert(`Excel report data for ${currentReportData.patient_name}:\\n\\n` + 
+                      JSON.stringify(patientData[0], null, 2) + 
+                      '\\n\\nIn production, this would download an Excel file.');
             }
         }
         
@@ -2521,6 +2884,22 @@ ADMIN_ANALYTICS_TEMPLATE = '''
                 </div>
             </div>
             
+            <!-- Department Wise Patient Distribution -->
+            <div class="analytics-card">
+                <div class="card-header">
+                    <h3 class="card-title">Department Wise Patients</h3>
+                    <p class="card-subtitle">Patient distribution across different departments</p>
+                    <div style="margin-top: 10px;">
+                        <button onclick="toggleDepartmentChartType()" id="chartTypeBtn" style="background: #1976d2; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                            Switch to Horizontal
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="departmentWiseChart"></canvas>
+                </div>
+            </div>
+            
             <!-- Department Performance -->
             <div class="analytics-card" style="grid-column: 1 / -1;">
                 <div class="card-header">
@@ -2574,7 +2953,9 @@ ADMIN_ANALYTICS_TEMPLATE = '''
     </div>
 
     <script>
-        let weeklyChart, riskChart;
+        let weeklyChart, riskChart, departmentChart;
+        let departmentData = [];
+        let isHorizontalChart = false;
         
         document.addEventListener('DOMContentLoaded', function() {
             loadAnalyticsData();
@@ -2585,14 +2966,26 @@ ADMIN_ANALYTICS_TEMPLATE = '''
                 const response = await fetch('/api/admin/analytics_data');
                 const data = await response.json();
                 
+                // Store department data for chart toggling
+                departmentData = data.department_performance;
+                
                 // Update charts
                 updateWeeklyTrendsChart(data.weekly_trends);
                 updateRiskDistributionChart(data.risk_distribution);
+                updateDepartmentWiseChart(data.department_performance);
                 updateDepartmentTable(data.department_performance);
                 
             } catch (error) {
                 console.error('Error loading analytics data:', error);
             }
+        }
+        
+        function toggleDepartmentChartType() {
+            isHorizontalChart = !isHorizontalChart;
+            updateDepartmentWiseChart(departmentData);
+            
+            const btn = document.getElementById('chartTypeBtn');
+            btn.textContent = isHorizontalChart ? 'Switch to Vertical' : 'Switch to Horizontal';
         }
         
         function updateWeeklyTrendsChart(data) {
@@ -2649,6 +3042,120 @@ ADMIN_ANALYTICS_TEMPLATE = '''
                         legend: {
                             position: 'bottom'
                         }
+                    }
+                }
+            });
+        }
+        
+        function updateDepartmentWiseChart(data) {
+            const ctx = document.getElementById('departmentWiseChart').getContext('2d');
+            
+            if (departmentChart) departmentChart.destroy();
+            
+            // Define colors for different departments
+            const departmentColors = {
+                'Cardiology': '#e74c3c',
+                'General Medicine': '#3498db',
+                'Emergency': '#e67e22',
+                'Pulmonology': '#9b59b6',
+                'Dermatology': '#2ecc71',
+                'Orthopedics': '#f39c12',
+                'Neurology': '#1abc9c',
+                'Pediatrics': '#34495e'
+            };
+            
+            const backgroundColors = data.map(dept => 
+                departmentColors[dept.department] || '#95a5a6'
+            );
+            
+            // Sort data by total patients for better visualization
+            const sortedData = [...data].sort((a, b) => b.total - a.total);
+            const sortedColors = sortedData.map(dept => 
+                departmentColors[dept.department] || '#95a5a6'
+            );
+            
+            departmentChart = new Chart(ctx, {
+                type: isHorizontalChart ? 'bar' : 'bar',
+                data: {
+                    labels: sortedData.map(d => d.department),
+                    datasets: [{
+                        label: 'Total Patients',
+                        data: sortedData.map(d => d.total),
+                        backgroundColor: sortedColors,
+                        borderColor: sortedColors.map(color => color),
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    indexAxis: isHorizontalChart ? 'y' : 'x',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            display: false 
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: '#1976d2',
+                            borderWidth: 1,
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label + ' Department';
+                                },
+                                label: function(context) {
+                                    return `Total Patients: ${context.parsed.y || context.parsed.x}`;
+                                },
+                                afterLabel: function(context) {
+                                    const dept = sortedData[context.dataIndex];
+                                    const confirmationRate = dept.total > 0 ? ((dept.confirmed / dept.total) * 100).toFixed(1) : '0.0';
+                                    return [
+                                        `Confirmed: ${dept.confirmed}`,
+                                        `Average Risk: ${dept.avg_risk}`,
+                                        `Confirmation Rate: ${confirmationRate}%`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        [isHorizontalChart ? 'x' : 'y']: { 
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Patients',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        [isHorizontalChart ? 'y' : 'x']: {
+                            title: {
+                                display: true,
+                                text: 'Departments',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    },
+                    onHover: (event, activeElements) => {
+                        event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
                     }
                 }
             });
@@ -3135,7 +3642,26 @@ ADMIN_REPORTS_TEMPLATE = '''
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert(`Daily report generated successfully!\\n\\nFilename: ${result.filename}\\n\\nReport includes:\\n- Total patients: ${result.report_data.total_patients}\\n- High-risk cases: ${result.report_data.high_risk_patients}\\n- Confirmed appointments: ${result.report_data.confirmed_appointments}`);
+                    // Show options for PDF and Excel download
+                    const downloadChoice = confirm(`Daily report generated successfully!\\n\\nReport includes:\\n- Total patients: ${result.report_data.total_patients}\\n- High-risk cases: ${result.report_data.high_risk_patients}\\n- Confirmed appointments: ${result.report_data.confirmed_appointments}\\n\\nClick OK to download PDF, Cancel to download Excel`);
+                    
+                    if (downloadChoice) {
+                        // Download PDF
+                        const link = document.createElement('a');
+                        link.href = '/api/admin/download_daily_report';
+                        link.download = `daily_report_${result.report_data.date}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } else {
+                        // Download Excel
+                        const link = document.createElement('a');
+                        link.href = '/api/admin/download_daily_excel';
+                        link.download = `daily_report_${result.report_data.date}.xlsx`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
                 } else {
                     alert('Error generating report: ' + result.error);
                 }
