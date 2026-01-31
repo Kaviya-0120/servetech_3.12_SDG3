@@ -912,125 +912,666 @@ HOSPITAL_LANDING_TEMPLATE = '''
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #f0f8ff 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            overflow-x: hidden;
         }
-        .hospital-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 25px;
-            padding: 60px;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.1);
+        
+        /* Mobile Sidebar */
+        .mobile-sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            z-index: 1000;
+            transition: left 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+        .mobile-sidebar.open { left: 0; }
+        
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .sidebar-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .sidebar-item {
+            display: block;
+            padding: 15px 20px;
+            color: #333;
+            text-decoration: none;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.3s ease;
+        }
+        .sidebar-item:hover { background: #f8f9fa; }
+        
+        .sidebar-item-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        /* Desktop Layout */
+        .desktop-container {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: white;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
+        }
+        
+        .desktop-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 40px;
             text-align: center;
-            max-width: 600px;
-            width: 90%;
+            color: white;
             position: relative;
         }
+        
+        .desktop-content {
+            padding: 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            align-items: center;
+        }
+        
+        /* Mobile App Container */
+        .app-container {
+            max-width: 414px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: #ffffff;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
+        }
+        
+        .status-bar {
+            height: 44px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .hamburger-menu {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .app-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 20px 24px 40px;
+            text-align: center;
+            position: relative;
+        }
+        
         .language-selector {
             position: absolute;
-            top: 20px;
+            top: 15px;
             right: 20px;
             display: flex;
-            gap: 10px;
+            gap: 6px;
         }
+        
         .lang-btn {
-            background: rgba(25, 118, 210, 0.1);
-            color: #1976d2;
-            border: 2px solid #1976d2;
-            padding: 8px 12px;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 6px 10px;
+            border-radius: 12px;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 12px;
             font-weight: 600;
             transition: all 0.3s ease;
         }
         .lang-btn:hover, .lang-btn.active {
-            background: #1976d2;
-            color: white;
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
         }
-        .hospital-logo {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #1976d2, #42a5f5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .hospital-name {
-            font-size: 2.8rem;
-            color: #1565c0;
-            margin-bottom: 15px;
-            font-weight: 700;
-        }
-        .hospital-tagline {
-            color: #546e7a;
-            margin-bottom: 50px;
-            font-size: 1.2rem;
-        }
-        .access-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-        .access-btn {
-            background: linear-gradient(135deg, #1976d2, #1565c0);
-            color: white;
-            border: none;
-            padding: 25px 40px;
-            border-radius: 15px;
-            font-size: 1.4rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            text-decoration: none;
+        
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            font-size: 40px;
+            margin: 0 auto 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        .access-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(25, 118, 210, 0.4);
+        
+        .app-title {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
-        .access-btn.admin {
-            background: linear-gradient(135deg, #d32f2f, #c62828);
+        
+        .app-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            font-weight: 400;
+        }
+        
+        .app-content {
+            padding: 32px 24px 100px;
+            background: #f8f9fa;
+            min-height: calc(100vh - 164px);
+            overflow-y: auto;
+        }
+        
+        .feature-grid {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .feature-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        
+        .feature-subtitle {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .admin-card {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+        .admin-card .feature-icon { background: rgba(255, 255, 255, 0.2); }
+        .admin-card .feature-title,
+        .admin-card .feature-subtitle { color: white; }
+        .admin-card .feature-subtitle { color: rgba(255, 255, 255, 0.8); }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            padding: 12px 0 20px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .nav-indicator {
+            width: 134px;
+            height: 5px;
+            background: #000;
+            border-radius: 3px;
+        }
+        
+        /* Responsive Design */
+        @media (min-width: 768px) {
+            body {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 40px 20px;
+            }
+            .app-container { display: none; }
+            .desktop-container {
+                display: block;
+                border-radius: 20px;
+                overflow: hidden;
+            }
+            .desktop-header .app-icon {
+                width: 120px;
+                height: 120px;
+                font-size: 60px;
+                margin: 0 auto 24px;
+            }
+            .desktop-header .app-title {
+                font-size: 48px;
+                margin-bottom: 16px;
+            }
+            .desktop-header .app-subtitle { font-size: 20px; }
+            .desktop-content .feature-card {
+                padding: 40px;
+                text-align: center;
+            }
+            .desktop-content .feature-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .desktop-content .feature-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+                margin: 0 auto 20px;
+            }
+            .desktop-content .feature-title {
+                font-size: 24px;
+                margin-bottom: 12px;
+            }
+            .desktop-content .feature-subtitle { font-size: 16px; }
+        }
+        
+        @media (max-width: 480px) {
+            .app-container {
+                max-width: 100%;
+                box-shadow: none;
+            }
+            .bottom-nav { max-width: 100%; }
+            .app-content { padding: 24px 16px 100px; }
+            .feature-card { padding: 20px; }
+            .language-selector {
+                position: static;
+                justify-content: center;
+                margin-bottom: 20px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .feature-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .feature-icon { margin: 0 auto 12px; }
+        }
+            right: 20px;
+            display: flex;
+            gap: 6px;
+        }
+        
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 6px 10px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .lang-btn:hover, .lang-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .app-title {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .app-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            font-weight: 400;
+        }
+        
+        .app-content {
+            padding: 32px 24px;
+            background: #f8f9fa;
+            min-height: calc(100vh - 164px);
+        }
+        
+        .feature-grid {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .feature-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+        
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        
+        .feature-subtitle {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .admin-card {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+        
+        .admin-card .feature-icon {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .admin-card .feature-title,
+        .admin-card .feature-subtitle {
+            color: white;
+        }
+        
+        .admin-card .feature-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            padding: 12px 0 20px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .nav-indicator {
+            width: 134px;
+            height: 5px;
+            background: #000;
+            border-radius: 3px;
+        }
+        
+        @media (max-width: 480px) {
+            .app-container {
+                max-width: 100%;
+                box-shadow: none;
+            }
+            
+            .bottom-nav {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="hospital-container">
-        <div class="language-selector">
-            <a href="/set_language/en" class="lang-btn {{ 'active' if session.get('language', 'en') == 'en' else '' }}">EN</a>
-            <a href="/set_language/hi" class="lang-btn {{ 'active' if session.get('language') == 'hi' else '' }}">हिं</a>
-            <a href="/set_language/ta" class="lang-btn {{ 'active' if session.get('language') == 'ta' else '' }}">த</a>
+    <!-- Mobile Sidebar -->
+    <div class="mobile-sidebar" id="mobileSidebar">
+        <div class="sidebar-header">
+            <button class="sidebar-close" onclick="closeSidebar()">×</button>
+            <div class="app-icon" style="width: 60px; height: 60px; font-size: 30px; margin: 0 auto 12px;">🏥</div>
+            <h3>{{ t('hospital_name') }}</h3>
+        </div>
+        <div class="sidebar-menu">
+            <a href="/patient" class="sidebar-item">
+                <span class="sidebar-item-icon">👤</span>
+                {{ t('patient_portal') }}
+            </a>
+            <a href="/admin" class="sidebar-item">
+                <span class="sidebar-item-icon">🛡️</span>
+                {{ t('admin_dashboard') }}
+            </a>
+            <div class="sidebar-item" style="border-bottom: none; padding-top: 20px;">
+                <span class="sidebar-item-icon">🌐</span>
+                Language / भाषा / மொழி
+                <div style="margin-top: 10px; display: flex; gap: 8px;">
+                    <a href="/set_language/en" class="lang-btn {{ 'active' if session.get('language', 'en') == 'en' else '' }}" style="background: #667eea; color: white; border: none;">EN</a>
+                    <a href="/set_language/hi" class="lang-btn {{ 'active' if session.get('language') == 'hi' else '' }}" style="background: #667eea; color: white; border: none;">हिं</a>
+                    <a href="/set_language/ta" class="lang-btn {{ 'active' if session.get('language') == 'ta' else '' }}" style="background: #667eea; color: white; border: none;">த</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    
+    <!-- Mobile App Container -->
+    <div class="app-container">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <button class="hamburger-menu" onclick="openSidebar()">☰</button>
+            <span>MediCare</span>
+            <span>100%</span>
         </div>
         
-        <div class="hospital-logo">🏥</div>
-        <h1 class="hospital-name">{{ t('hospital_name') }}</h1>
-        <p class="hospital-tagline">{{ t('hospital_tagline') }}</p>
+        <!-- App Header -->
+        <div class="app-header">
+            <div class="language-selector">
+                <a href="/set_language/en" class="lang-btn {{ 'active' if session.get('language', 'en') == 'en' else '' }}">EN</a>
+                <a href="/set_language/hi" class="lang-btn {{ 'active' if session.get('language') == 'hi' else '' }}">हिं</a>
+                <a href="/set_language/ta" class="lang-btn {{ 'active' if session.get('language') == 'ta' else '' }}">த</a>
+            </div>
+            
+            <div class="app-icon">🏥</div>
+            <h1 class="app-title">{{ t('hospital_name') }}</h1>
+            <p class="app-subtitle">{{ t('hospital_tagline') }}</p>
+        </div>
         
-        <div class="access-buttons">
-            <a href="/patient" class="access-btn">
-                <span>👤</span>
-                <div>
-                    <div>{{ t('patient_portal') }}</div>
-                    <div style="font-size: 0.9rem; font-weight: normal; margin-top: 5px;">{{ t('patient_portal_desc') }}</div>
+        <!-- App Content -->
+        <div class="app-content">
+            <div class="feature-grid">
+                <a href="/patient" class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">👤</div>
+                        <div>
+                            <div class="feature-title">{{ t('patient_portal') }}</div>
+                            <div class="feature-subtitle">{{ t('patient_portal_desc') }}</div>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/admin" class="feature-card admin-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">🛡️</div>
+                        <div>
+                            <div class="feature-title">{{ t('admin_dashboard') }}</div>
+                            <div class="feature-subtitle">{{ t('admin_dashboard_desc') }}</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-indicator"></div>
+        </div>
+    </div>
+    
+    <!-- Desktop Container -->
+    <div class="desktop-container">
+        <!-- Desktop Header -->
+        <div class="desktop-header">
+            <div class="language-selector" style="position: absolute; top: 20px; right: 20px;">
+                <a href="/set_language/en" class="lang-btn {{ 'active' if session.get('language', 'en') == 'en' else '' }}">EN</a>
+                <a href="/set_language/hi" class="lang-btn {{ 'active' if session.get('language') == 'hi' else '' }}">हिं</a>
+                <a href="/set_language/ta" class="lang-btn {{ 'active' if session.get('language') == 'ta' else '' }}">த</a>
+            </div>
+            
+            <div class="app-icon">🏥</div>
+            <h1 class="app-title">{{ t('hospital_name') }}</h1>
+            <p class="app-subtitle">{{ t('hospital_tagline') }}</p>
+        </div>
+        
+        <!-- Desktop Content -->
+        <div class="desktop-content">
+            <a href="/patient" class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">👤</div>
+                    <div>
+                        <div class="feature-title">{{ t('patient_portal') }}</div>
+                        <div class="feature-subtitle">{{ t('patient_portal_desc') }}</div>
+                    </div>
                 </div>
             </a>
             
-            <a href="/admin" class="access-btn admin">
-                <span>🛡️</span>
-                <div>
-                    <div>{{ t('admin_dashboard') }}</div>
-                    <div style="font-size: 0.9rem; font-weight: normal; margin-top: 5px;">{{ t('admin_dashboard_desc') }}</div>
+            <a href="/admin" class="feature-card admin-card">
+                <div class="feature-header">
+                    <div class="feature-icon">🛡️</div>
+                    <div>
+                        <div class="feature-title">{{ t('admin_dashboard') }}</div>
+                        <div class="feature-subtitle">{{ t('admin_dashboard_desc') }}</div>
+                    </div>
                 </div>
             </a>
         </div>
     </div>
+
+    <script>
+        function openSidebar() {
+            document.getElementById('mobileSidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeSidebar() {
+            document.getElementById('mobileSidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close sidebar when clicking on links
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (item.getAttribute('href')) {
+                    closeSidebar();
+                }
+            });
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) {
+                closeSidebar();
+            }
+        });
+    </script>
 </body>
 </html>
 '''
@@ -1055,6 +1596,7 @@ PATIENT_PORTAL_TEMPLATE = '''
             margin-bottom: 40px;
             color: #1565c0;
             position: relative;
+            padding-top: 50px;
         }
         .language-selector {
             position: absolute;
@@ -1062,6 +1604,7 @@ PATIENT_PORTAL_TEMPLATE = '''
             right: 0;
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
         .lang-btn {
             background: rgba(25, 118, 210, 0.1);
@@ -1073,6 +1616,7 @@ PATIENT_PORTAL_TEMPLATE = '''
             font-size: 0.8rem;
             font-weight: 600;
             transition: all 0.3s ease;
+            white-space: nowrap;
         }
         .lang-btn:hover, .lang-btn.active {
             background: #1976d2;
@@ -1122,6 +1666,52 @@ PATIENT_PORTAL_TEMPLATE = '''
             display: inline-flex;
             align-items: center;
             gap: 10px;
+        }
+        
+        /* Responsive Design for Mobile */
+        @media (max-width: 768px) {
+            .header {
+                padding-top: 60px;
+            }
+            .language-selector {
+                position: static;
+                justify-content: center;
+                margin-bottom: 20px;
+                gap: 6px;
+            }
+            .lang-btn {
+                font-size: 0.75rem;
+                padding: 5px 8px;
+            }
+            .container {
+                padding: 30px 20px;
+            }
+            .options-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header {
+                padding-top: 40px;
+            }
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            .container {
+                padding: 20px 15px;
+            }
+            .option-card {
+                padding: 30px 20px;
+            }
+            .language-selector {
+                gap: 4px;
+            }
+            .lang-btn {
+                font-size: 0.7rem;
+                padding: 4px 6px;
+            }
         }
     </style>
 </head>
@@ -1929,7 +2519,9 @@ ENHANCED_ADMIN_DASHBOARD_TEMPLATE = '''
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1565c0">
     <title>Admin Dashboard - MediCare Hospital</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -2200,13 +2792,304 @@ ENHANCED_ADMIN_DASHBOARD_TEMPLATE = '''
         
         /* Responsive Design */
         @media (max-width: 768px) {
+            .admin-navbar {
+                position: relative;
+            }
             .navbar-content {
                 flex-direction: column;
-                gap: 20px;
+                gap: 10px;
+                padding: 0 15px;
+            }
+            .navbar-brand {
+                padding: 12px 0;
+            }
+            .brand-icon {
+                font-size: 1.5rem;
+            }
+            .brand-text h1 {
+                font-size: 1.1rem;
+            }
+            .brand-text p {
+                font-size: 0.75rem;
+                opacity: 0.8;
+            }
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 4px;
+                width: 100%;
+                margin: 5px 0;
+            }
+            .nav-link {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+                border-radius: 6px;
+                background: rgba(255, 255, 255, 0.1);
+                margin: 1px;
+                min-height: 36px;
+            }
+            .nav-link span {
+                font-size: 0.9rem;
+            }
+            .user-menu {
+                flex-direction: row;
+                gap: 10px;
+                text-align: center;
+                width: 100%;
+                justify-content: center;
+                align-items: center;
+                padding: 8px 0;
+            }
+            .user-info {
+                text-align: center;
+            }
+            .user-name {
+                font-size: 0.85rem;
+            }
+            .user-role {
+                font-size: 0.7rem;
+            }
+            .logout-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+                min-height: 32px;
+            }
+            .main-content {
+                padding: 20px 15px;
+            }
+            .dashboard-title {
+                font-size: 1.8rem;
+                margin-bottom: 10px;
+            }
+            .dashboard-subtitle {
+                font-size: 1rem;
+                margin-bottom: 20px;
             }
             .stats-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
+                margin-bottom: 25px;
             }
+            .stat-card {
+                padding: 20px;
+                border-radius: 12px;
+            }
+            .stat-header {
+                margin-bottom: 12px;
+            }
+            .stat-icon {
+                font-size: 2.2rem;
+            }
+            .stat-number {
+                font-size: 1.8rem;
+                margin-bottom: 6px;
+            }
+            .stat-label {
+                font-size: 0.9rem;
+            }
+            .patients-section {
+                padding: 20px;
+                margin-bottom: 20px;
+                border-radius: 12px;
+            }
+            .section-header h3 {
+                font-size: 1.2rem;
+            }
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border-radius: 8px;
+                margin-top: 15px;
+            }
+            .patients-table {
+                min-width: 800px;
+                font-size: 0.85rem;
+            }
+            .patients-table th,
+            .patients-table td {
+                padding: 10px 8px;
+                white-space: nowrap;
+            }
+            .patients-table th {
+                font-size: 0.8rem;
+                font-weight: 600;
+            }
+            .risk-badge,
+            .status-badge {
+                font-size: 0.7rem;
+                padding: 3px 6px;
+                border-radius: 6px;
+            }
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+                margin: 10px;
+                border-radius: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .navbar-content {
+                padding: 0 10px;
+            }
+            .navbar-brand {
+                padding: 10px 0;
+                flex-direction: row;
+                gap: 8px;
+            }
+            .brand-icon {
+                font-size: 1.3rem;
+            }
+            .brand-text h1 {
+                font-size: 1rem;
+            }
+            .brand-text p {
+                display: none;
+            }
+            .nav-menu {
+                gap: 2px;
+                margin: 3px 0;
+            }
+            .nav-link {
+                padding: 6px 8px;
+                font-size: 0.75rem;
+                min-height: 32px;
+            }
+            .nav-link span {
+                font-size: 0.8rem;
+            }
+            .user-menu {
+                padding: 6px 0;
+                gap: 8px;
+            }
+            .user-name {
+                font-size: 0.8rem;
+            }
+            .user-role {
+                font-size: 0.65rem;
+            }
+            .logout-btn {
+                padding: 5px 10px;
+                font-size: 0.75rem;
+                min-height: 28px;
+            }
+            .main-content {
+                padding: 15px 10px;
+            }
+            .dashboard-title {
+                font-size: 1.5rem;
+            }
+            .dashboard-subtitle {
+                font-size: 0.9rem;
+            }
+            .stat-card {
+                padding: 15px;
+            }
+            .stat-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 8px;
+            }
+            .stat-icon {
+                font-size: 2rem;
+            }
+            .stat-number {
+                font-size: 1.6rem;
+            }
+            .patients-section {
+                padding: 15px;
+            }
+            .section-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            .section-header h3 {
+                font-size: 1.1rem;
+            }
+            .patients-table {
+                min-width: 700px;
+            }
+            .patients-table th,
+            .patients-table td {
+                padding: 8px 6px;
+                font-size: 0.8rem;
+            }
+            .modal-content {
+                padding: 15px;
+            }
+        }
+        
+        /* Android-specific optimizations */
+        @media (max-width: 414px) {
+            .navbar-brand {
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
+            }
+            .brand-icon {
+                font-size: 1.8rem;
+            }
+            .brand-text h1 {
+                font-size: 1.1rem;
+            }
+            .brand-text p {
+                font-size: 0.8rem;
+            }
+            .main-content {
+                padding: 15px 12px;
+            }
+            .dashboard-header {
+                margin-bottom: 20px;
+            }
+            .dashboard-title {
+                font-size: 1.5rem;
+                line-height: 1.3;
+            }
+            .dashboard-subtitle {
+                font-size: 0.95rem;
+                line-height: 1.4;
+            }
+            .stats-grid {
+                gap: 15px;
+            }
+            .stat-card {
+                padding: 18px;
+            }
+            .stat-icon {
+                font-size: 2.2rem;
+            }
+            .stat-number {
+                font-size: 1.8rem;
+            }
+            .stat-label {
+                font-size: 0.9rem;
+            }
+            .patients-section {
+                padding: 18px;
+            }
+            .section-header h3 {
+                font-size: 1.1rem;
+            }
+        }
+        
+        /* Touch-friendly buttons */
+        button, .btn, .nav-link, .lang-btn {
+            min-height: 44px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Smooth scrolling for mobile */
+        .table-container {
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+        
+        /* Prevent zoom on input focus */
+        input, select, textarea {
+            font-size: 16px;
         }
     </style>
 </head>
@@ -2800,9 +3683,64 @@ ADMIN_ANALYTICS_TEMPLATE = '''
         
         /* Responsive Design */
         @media (max-width: 768px) {
-            .navbar-content { flex-direction: column; gap: 20px; }
-            .nav-menu { flex-wrap: wrap; justify-content: center; }
-            .analytics-grid { grid-template-columns: 1fr; }
+            .navbar-content { 
+                flex-direction: column; 
+                gap: 15px; 
+                padding: 0 15px;
+            }
+            .navbar-brand {
+                padding: 15px 0;
+            }
+            .brand-text h1 {
+                font-size: 1.2rem;
+            }
+            .nav-menu { 
+                flex-wrap: wrap; 
+                justify-content: center; 
+                gap: 5px;
+            }
+            .nav-link {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+            .user-menu {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            .main-content {
+                padding: 20px 15px;
+            }
+            .page-title {
+                font-size: 1.8rem;
+            }
+            .analytics-grid { 
+                grid-template-columns: 1fr; 
+                gap: 20px;
+            }
+            .analytics-card {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nav-menu {
+                flex-direction: column;
+                width: 100%;
+            }
+            .nav-link {
+                padding: 10px;
+                justify-content: center;
+            }
+            .main-content {
+                padding: 15px 10px;
+            }
+            .page-title {
+                font-size: 1.5rem;
+            }
+            .analytics-card {
+                padding: 15px;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -3410,9 +4348,72 @@ ADMIN_REPORTS_TEMPLATE = '''
         
         /* Responsive Design */
         @media (max-width: 768px) {
-            .navbar-content { flex-direction: column; gap: 20px; }
-            .nav-menu { flex-wrap: wrap; justify-content: center; }
-            .reports-grid { grid-template-columns: 1fr; }
+            .navbar-content { 
+                flex-direction: column; 
+                gap: 15px; 
+                padding: 0 15px;
+            }
+            .navbar-brand {
+                padding: 15px 0;
+            }
+            .brand-text h1 {
+                font-size: 1.2rem;
+            }
+            .nav-menu { 
+                flex-wrap: wrap; 
+                justify-content: center; 
+                gap: 5px;
+            }
+            .nav-link {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+            .user-menu {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            .main-content {
+                padding: 20px 15px;
+            }
+            .page-title {
+                font-size: 1.8rem;
+            }
+            .reports-grid { 
+                grid-template-columns: 1fr; 
+                gap: 20px;
+            }
+            .report-card {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nav-menu {
+                flex-direction: column;
+                width: 100%;
+            }
+            .nav-link {
+                padding: 10px;
+                justify-content: center;
+            }
+            .main-content {
+                padding: 15px 10px;
+            }
+            .page-title {
+                font-size: 1.5rem;
+            }
+            .report-card {
+                padding: 15px;
+            }
+            .report-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            .report-icon {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
@@ -3956,10 +4957,81 @@ ADMIN_SETTINGS_TEMPLATE = '''
         
         /* Responsive Design */
         @media (max-width: 768px) {
-            .navbar-content { flex-direction: column; gap: 20px; }
-            .nav-menu { flex-wrap: wrap; justify-content: center; }
-            .form-grid { grid-template-columns: 1fr; }
-            .section-actions { flex-direction: column; }
+            .navbar-content { 
+                flex-direction: column; 
+                gap: 15px; 
+                padding: 0 15px;
+            }
+            .navbar-brand {
+                padding: 15px 0;
+            }
+            .brand-text h1 {
+                font-size: 1.2rem;
+            }
+            .nav-menu { 
+                flex-wrap: wrap; 
+                justify-content: center; 
+                gap: 5px;
+            }
+            .nav-link {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+            .user-menu {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            .main-content {
+                padding: 20px 15px;
+            }
+            .page-title {
+                font-size: 1.8rem;
+            }
+            .settings-section {
+                padding: 20px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nav-menu {
+                flex-direction: column;
+                width: 100%;
+            }
+            .nav-link {
+                padding: 10px;
+                justify-content: center;
+            }
+            .main-content {
+                padding: 15px 10px;
+            }
+            .page-title {
+                font-size: 1.5rem;
+            }
+            .settings-section {
+                padding: 15px;
+            }
+            .section-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            .section-icon {
+                font-size: 1.5rem;
+            }
+            .section-actions { 
+                flex-direction: column; 
+                gap: 10px;
+            }
+            .form-group input, 
+            .form-group select {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>

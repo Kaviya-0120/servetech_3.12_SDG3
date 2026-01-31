@@ -13,18 +13,22 @@ MULTILINGUAL_PATIENT_REGISTER_TEMPLATE = '''
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #f0f8ff 100%);
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 50%, rgba(219, 234, 254, 0.1) 100%),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="medical" patternUnits="userSpaceOnUse" width="100" height="100"><circle cx="50" cy="50" r="2" fill="%23dbeafe" opacity="0.3"/><path d="M45 45h10v10h-10z" fill="%23bfdbfe" opacity="0.2"/></pattern></defs><rect width="100%" height="100%" fill="url(%23medical)"/></svg>');
             min-height: 100vh;
             padding: 20px;
+            background-attachment: fixed;
         }
         .container {
             max-width: 900px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 25px;
-            padding: 40px;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.1);
             position: relative;
         }
         .language-selector {
@@ -51,26 +55,64 @@ MULTILINGUAL_PATIENT_REGISTER_TEMPLATE = '''
         }
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            color: #1565c0;
+            margin-bottom: 40px;
+            color: #1e40af;
+            position: relative;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            border-radius: 2px;
+        }
+        .header h1 {
+            color: #1e40af;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.025em;
+        }
+        .header p {
+            color: #64748b;
+            font-size: 1.1rem;
+            font-weight: 500;
         }
         .form-section {
-            margin-bottom: 35px;
-            padding: 25px;
-            background: linear-gradient(135deg, #fafafa, #ffffff);
-            border-radius: 15px;
+            margin-bottom: 40px;
+            padding: 32px;
+            background: linear-gradient(135deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.6));
+            border-radius: 20px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+        .form-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
         }
         .section-title {
-            font-size: 1.3rem;
-            color: #1565c0;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e3f2fd;
+            font-size: 1.4rem;
+            color: #1e40af;
+            margin-bottom: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
         }
         .form-group {
             display: flex;
@@ -82,98 +124,155 @@ MULTILINGUAL_PATIENT_REGISTER_TEMPLATE = '''
         label {
             margin-bottom: 8px;
             font-weight: 600;
-            color: #1565c0;
+            color: #1e40af;
+            font-size: 0.95rem;
         }
         input, select, textarea {
-            padding: 15px;
-            border: 2px solid #e3f2fd;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
             border-radius: 12px;
             font-size: 1rem;
             transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            font-family: inherit;
         }
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #1976d2;
-            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: rgba(255, 255, 255, 1);
         }
         .severity-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
         }
         .severity-btn {
-            padding: 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            background: white;
+            padding: 24px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.9);
             cursor: pointer;
             text-align: center;
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .severity-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        .severity-btn:hover::before {
+            left: 100%;
         }
         .severity-btn.selected {
-            border-color: #1976d2;
-            background: linear-gradient(135deg, #e3f2fd, #ffffff);
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
         }
         .emergency-section {
-            background: linear-gradient(135deg, #ffebee, #fce4ec);
-            border: 2px solid #f8bbd9;
-            border-radius: 15px;
-            padding: 25px;
-            margin: 25px 0;
+            background: linear-gradient(135deg, rgba(254, 242, 242, 0.9), rgba(254, 226, 226, 0.7));
+            border: 2px solid rgba(248, 113, 113, 0.3);
+            border-radius: 20px;
+            padding: 32px;
+            margin: 32px 0;
+            position: relative;
+        }
+        .emergency-section::before {
+            content: '🚨';
+            position: absolute;
+            top: -15px;
+            left: 24px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         .emergency-switch {
             position: relative;
-            width: 60px;
-            height: 30px;
-            background: #ccc;
-            border-radius: 15px;
+            width: 64px;
+            height: 32px;
+            background: #cbd5e1;
+            border-radius: 16px;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
         }
         .emergency-switch.active {
-            background: #f44336;
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
         }
         .emergency-switch::before {
             content: '';
             position: absolute;
-            width: 26px;
-            height: 26px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             background: white;
             top: 2px;
             left: 2px;
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
         .emergency-switch.active::before {
-            transform: translateX(30px);
+            transform: translateX(32px);
         }
         .submit-btn {
-            background: linear-gradient(135deg, #1976d2, #1565c0);
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
             border: none;
             padding: 20px 40px;
-            border-radius: 15px;
+            border-radius: 16px;
             font-size: 1.2rem;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
-            margin-top: 30px;
+            margin-top: 40px;
             transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
         }
         .submit-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(25, 118, 210, 0.4);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4);
+        }
+        .submit-btn:hover::before {
+            left: 100%;
         }
         .back-btn {
-            background: #90a4ae;
+            background: linear-gradient(135deg, #64748b, #475569);
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 10px;
+            padding: 12px 24px;
+            border-radius: 12px;
             text-decoration: none;
-            display: inline-block;
-            margin-bottom: 25px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 32px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(100, 116, 139, 0.3);
         }
         .modal {
             display: none;
@@ -194,6 +293,29 @@ MULTILINGUAL_PATIENT_REGISTER_TEMPLATE = '''
             text-align: center;
             max-width: 600px;
             width: 90%;
+        }
+        @media (max-width: 768px) {
+            .container { padding: 24px; }
+            .form-section { padding: 24px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .severity-grid { grid-template-columns: 1fr; }
+            .header h1 { font-size: 2rem; }
+            .header p { font-size: 1rem; }
+            .language-selector {
+                position: static !important;
+                justify-content: center;
+                margin-bottom: 20px;
+                gap: 6px;
+            }
+        }
+        @media (max-width: 480px) {
+            .language-selector {
+                gap: 4px;
+            }
+            .lang-btn {
+                font-size: 0.7rem;
+                padding: 4px 6px;
+            }
         }
     </style>
 </head>
@@ -433,16 +555,41 @@ MULTILINGUAL_PATIENT_STATUS_TEMPLATE = '''
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #f0f8ff 100%);
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 50%, rgba(219, 234, 254, 0.1) 100%),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="medical" patternUnits="userSpaceOnUse" width="100" height="100"><circle cx="50" cy="50" r="2" fill="%23dbeafe" opacity="0.3"/><path d="M45 45h10v10h-10z" fill="%23bfdbfe" opacity="0.2"/></pattern></defs><rect width="100%" height="100%" fill="url(%23medical)"/></svg>');
             min-height: 100vh;
             padding: 20px;
+            background-attachment: fixed;
         }
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            color: #1565c0;
+            margin-bottom: 40px;
+            color: #1e40af;
             position: relative;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            border-radius: 2px;
+        }
+        .header h1 {
+            color: #1e40af;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.025em;
+        }
+        .header p {
+            color: #64748b;
+            font-size: 1.1rem;
+            font-weight: 500;
         }
         .language-selector {
             position: absolute;
@@ -469,23 +616,36 @@ MULTILINGUAL_PATIENT_STATUS_TEMPLATE = '''
         .container {
             max-width: 700px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 25px;
-            padding: 40px;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.1);
         }
         .search-input {
             width: 100%;
             padding: 18px;
-            border: 2px solid #e3f2fd;
+            border: 2px solid #e2e8f0;
             border-radius: 12px;
             font-size: 1.1rem;
             text-align: center;
             margin-bottom: 20px;
             text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: rgba(255, 255, 255, 1);
         }
         .search-btn {
-            background: linear-gradient(135deg, #1976d2, #1565c0);
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
             border: none;
             padding: 18px 35px;
@@ -493,13 +653,34 @@ MULTILINGUAL_PATIENT_STATUS_TEMPLATE = '''
             font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .search-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        .search-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4);
+        }
+        .search-btn:hover::before {
+            left: 100%;
         }
         .status-card {
             display: none;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            background: linear-gradient(135deg, rgba(248, 250, 252, 0.9), rgba(241, 245, 249, 0.8));
             border-radius: 20px;
             padding: 35px;
             margin-top: 30px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            backdrop-filter: blur(10px);
         }
         .status-badge {
             display: inline-block;
@@ -518,29 +699,60 @@ MULTILINGUAL_PATIENT_STATUS_TEMPLATE = '''
             gap: 20px;
         }
         .info-item {
-            background: white;
+            background: rgba(255, 255, 255, 0.8);
             padding: 20px;
             border-radius: 12px;
-            border-left: 4px solid #1976d2;
+            border-left: 4px solid #3b82f6;
+            backdrop-filter: blur(5px);
         }
         .error-message {
-            background: linear-gradient(135deg, #ffebee, #fce4ec);
-            color: #c62828;
+            background: linear-gradient(135deg, rgba(254, 242, 242, 0.9), rgba(254, 226, 226, 0.8));
+            color: #dc2626;
             padding: 20px;
             border-radius: 12px;
             margin-top: 20px;
             text-align: center;
             display: none;
+            border: 1px solid rgba(248, 113, 113, 0.3);
         }
         .back-btn {
-            background: #90a4ae;
+            background: linear-gradient(135deg, #64748b, #475569);
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 10px;
+            padding: 12px 24px;
+            border-radius: 12px;
             text-decoration: none;
-            display: inline-block;
-            margin-bottom: 25px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 32px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(100, 116, 139, 0.3);
+        }
+        @media (max-width: 768px) {
+            .container { padding: 24px; }
+            .info-grid { grid-template-columns: 1fr; }
+            .header h1 { font-size: 2rem; }
+            .header p { font-size: 1rem; }
+            .language-selector {
+                position: static !important;
+                justify-content: center;
+                margin-bottom: 20px;
+                gap: 6px;
+            }
+        }
+        @media (max-width: 480px) {
+            .language-selector {
+                gap: 4px;
+            }
+            .lang-btn {
+                font-size: 0.7rem;
+                padding: 4px 6px;
+            }
         }
     </style>
 </head>

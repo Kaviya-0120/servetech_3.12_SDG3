@@ -10,64 +10,278 @@ ENHANCED_PATIENT_REGISTER_TEMPLATE = '''
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 50%, rgba(219, 234, 254, 0.1) 100%),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="medical" patternUnits="userSpaceOnUse" width="100" height="100"><circle cx="50" cy="50" r="2" fill="%23dbeafe" opacity="0.3"/><path d="M45 45h10v10h-10z" fill="%23bfdbfe" opacity="0.2"/></pattern></defs><rect width="100%" height="100%" fill="url(%23medical)"/></svg>');
             min-height: 100vh;
             padding: 20px;
+            background-attachment: fixed;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.1);
         }
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            color: #1565c0;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            border-radius: 2px;
+        }
+        .header h1 {
+            color: #1e40af;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.025em;
+        }
+        .header p {
+            color: #64748b;
+            font-size: 1.1rem;
+            font-weight: 500;
         }
         .form-section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
+            margin-bottom: 40px;
+            padding: 32px;
+            background: linear-gradient(135deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.6));
+            border-radius: 20px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+        .form-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
+        }
+        .section-title {
+            font-size: 1.4rem;
+            color: #1e40af;
+            margin-bottom: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
         }
         .form-group {
-            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
         }
         .form-group label {
-            display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #1565c0;
+            color: #1e40af;
+            font-size: 0.95rem;
         }
         .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
             font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: rgba(255, 255, 255, 1);
+        }
+        .severity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
+        }
+        .severity-btn {
+            padding: 24px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .severity-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        .severity-btn:hover::before {
+            left: 100%;
+        }
+        .severity-btn.selected {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+        }
+        .severity-btn .severity-label {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+        .severity-btn.mild .severity-label { color: #059669; }
+        .severity-btn.moderate .severity-label { color: #d97706; }
+        .severity-btn.severe .severity-label { color: #dc2626; }
+        .severity-btn .severity-desc {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .emergency-section {
+            background: linear-gradient(135deg, rgba(254, 242, 242, 0.9), rgba(254, 226, 226, 0.7));
+            border: 2px solid rgba(248, 113, 113, 0.3);
+            border-radius: 20px;
+            padding: 32px;
+            margin: 32px 0;
+            position: relative;
+        }
+        .emergency-section::before {
+            content: '🚨';
+            position: absolute;
+            top: -15px;
+            left: 24px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .emergency-toggle {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .emergency-switch {
+            position: relative;
+            width: 64px;
+            height: 32px;
+            background: #cbd5e1;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .emergency-switch.active {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+        }
+        .emergency-switch::before {
+            content: '';
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        .emergency-switch.active::before {
+            transform: translateX(32px);
+        }
+        .emergency-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #dc2626;
+        }
+        .emergency-desc {
+            color: #991b1b;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-weight: 500;
         }
         .submit-btn {
-            background: linear-gradient(135deg, #1976d2, #1565c0);
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-size: 1.1rem;
+            padding: 20px 40px;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            font-weight: 600;
             cursor: pointer;
             width: 100%;
+            margin-top: 40px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4);
+        }
+        .submit-btn:hover::before {
+            left: 100%;
         }
         .back-btn {
-            background: #90a4ae;
+            background: linear-gradient(135deg, #64748b, #475569);
             color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
             text-decoration: none;
-            display: inline-block;
-            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 32px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(100, 116, 139, 0.3);
+        }
+        @media (max-width: 768px) {
+            .container { padding: 24px; }
+            .form-section { padding: 24px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .severity-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -75,81 +289,142 @@ ENHANCED_PATIENT_REGISTER_TEMPLATE = '''
     <div class="container">
         <div class="header">
             <h1>📝 Book Appointment</h1>
-            <p>Please fill out your information</p>
+            <p>Please fill out your information for medical consultation</p>
         </div>
         
-        <a href="/patient" class="back-btn">← Back</a>
+        <a href="/patient" class="back-btn">← Back to Patient Portal</a>
         
         <form id="registrationForm">
             <div class="form-section">
-                <h3>Personal Information</h3>
-                <div class="form-group">
-                    <label for="name">Full Name *</label>
-                    <input type="text" id="name" name="name" required>
+                <div class="section-title">
+                    👤 Personal Information
                 </div>
-                <div class="form-group">
-                    <label for="age">Age *</label>
-                    <input type="number" id="age" name="age" min="1" max="120" required>
-                </div>
-                <div class="form-group">
-                    <label for="gender">Gender *</label>
-                    <select id="gender" name="gender" required>
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="phone">Phone Number *</label>
-                    <input type="tel" id="phone" name="phone" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="age">Age *</label>
+                        <input type="number" id="age" name="age" min="1" max="120" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender *</label>
+                        <select id="gender" name="gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email">
+                    </div>
                 </div>
             </div>
             
             <div class="form-section">
-                <h3>Medical Information</h3>
-                <div class="form-group">
+                <div class="section-title">
+                    🩺 Medical Information
+                </div>
+                
+                <div class="form-group full-width">
                     <label for="main_symptom">Primary Symptom/Concern *</label>
-                    <textarea id="main_symptom" name="main_symptom" rows="4" required></textarea>
+                    <textarea id="main_symptom" name="main_symptom" rows="4" 
+                              placeholder="Please describe your main health concern in detail..." required></textarea>
                 </div>
+                
                 <div class="form-group">
-                    <label for="severity">Symptom Severity *</label>
-                    <select id="severity" name="severity" required>
-                        <option value="">Select Severity</option>
-                        <option value="Mild">Mild</option>
-                        <option value="Moderate">Moderate</option>
-                        <option value="Severe">Severe</option>
-                    </select>
+                    <label>Symptom Severity *</label>
+                    <div class="severity-grid">
+                        <div class="severity-btn mild" onclick="selectSeverity('Mild', this)">
+                            <div class="severity-label">Mild</div>
+                            <div class="severity-desc">Manageable discomfort</div>
+                        </div>
+                        <div class="severity-btn moderate" onclick="selectSeverity('Moderate', this)">
+                            <div class="severity-label">Moderate</div>
+                            <div class="severity-desc">Noticeable impact</div>
+                        </div>
+                        <div class="severity-btn severe" onclick="selectSeverity('Severe', this)">
+                            <div class="severity-label">Severe</div>
+                            <div class="severity-desc">Significant distress</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="severity" name="severity" required>
                 </div>
+                
                 <div class="form-group">
                     <label for="symptom_days">Duration of Symptoms *</label>
                     <select id="symptom_days" name="symptom_days" required>
-                        <option value="">Select Duration</option>
-                        <option value="1">Today</option>
+                        <option value="">Select duration</option>
+                        <option value="1">Today (1 day)</option>
                         <option value="2">2-3 days</option>
-                        <option value="7">1 week</option>
-                        <option value="30">1 month</option>
+                        <option value="7">About a week</option>
+                        <option value="14">About 2 weeks</option>
+                        <option value="30">About a month</option>
+                        <option value="90">More than a month</option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="is_emergency" name="is_emergency">
-                        This is an Emergency
-                    </label>
                 </div>
             </div>
             
-            <button type="submit" class="submit-btn">Book Appointment</button>
+            <div class="emergency-section">
+                <div class="emergency-toggle">
+                    <div class="emergency-switch" id="emergencySwitch" onclick="toggleEmergency()"></div>
+                    <div class="emergency-title">This is an Emergency</div>
+                </div>
+                <div class="emergency-desc">
+                    <strong>Emergency Priority:</strong> Selecting this option will prioritize your case and attempt to schedule you for immediate consultation.
+                </div>
+                <input type="hidden" id="is_emergency" name="is_emergency" value="false">
+            </div>
+            
+            <button type="submit" class="submit-btn">
+                📅 Book Appointment
+            </button>
         </form>
     </div>
 
     <script>
+        let selectedSeverity = '';
+        let isEmergency = false;
+        
+        function selectSeverity(severity, element) {
+            document.querySelectorAll('.severity-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            element.classList.add('selected');
+            selectedSeverity = severity;
+            document.getElementById('severity').value = severity;
+        }
+        
+        function toggleEmergency() {
+            const switchEl = document.getElementById('emergencySwitch');
+            const hiddenInput = document.getElementById('is_emergency');
+            
+            isEmergency = !isEmergency;
+            
+            if (isEmergency) {
+                switchEl.classList.add('active');
+                hiddenInput.value = 'true';
+            } else {
+                switchEl.classList.remove('active');
+                hiddenInput.value = 'false';
+            }
+        }
+        
         document.getElementById('registrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            if (!selectedSeverity) {
+                alert('Please select symptom severity');
+                return;
+            }
             
             const formData = {
                 name: document.getElementById('name').value,
@@ -158,9 +433,9 @@ ENHANCED_PATIENT_REGISTER_TEMPLATE = '''
                 phone: document.getElementById('phone').value,
                 email: document.getElementById('email').value,
                 main_symptom: document.getElementById('main_symptom').value,
-                severity: document.getElementById('severity').value,
+                severity: selectedSeverity,
                 symptom_days: parseInt(document.getElementById('symptom_days').value),
-                is_emergency: document.getElementById('is_emergency').checked
+                is_emergency: isEmergency
             };
             
             try {
@@ -199,72 +474,202 @@ ENHANCED_PATIENT_STATUS_TEMPLATE = '''
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 50%, rgba(219, 234, 254, 0.1) 100%),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="medical" patternUnits="userSpaceOnUse" width="100" height="100"><circle cx="50" cy="50" r="2" fill="%23dbeafe" opacity="0.3"/><path d="M45 45h10v10h-10z" fill="%23bfdbfe" opacity="0.2"/></pattern></defs><rect width="100%" height="100%" fill="url(%23medical)"/></svg>');
             min-height: 100vh;
             padding: 20px;
+            background-attachment: fixed;
         }
         .container {
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.1);
         }
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            color: #1565c0;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            border-radius: 2px;
+        }
+        .header h1 {
+            color: #1e40af;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.025em;
+        }
+        .header p {
+            color: #64748b;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .search-section {
+            background: linear-gradient(135deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.6));
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            position: relative;
+        }
+        .search-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
         }
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
         .form-group label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #1565c0;
+            color: #1e40af;
+            font-size: 0.95rem;
         }
         .form-group input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: rgba(255, 255, 255, 1);
         }
         .check-btn {
-            background: linear-gradient(135deg, #1976d2, #1565c0);
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
+            padding: 18px 36px;
+            border-radius: 12px;
             font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
             width: 100%;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .check-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        .check-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4);
+        }
+        .check-btn:hover::before {
+            left: 100%;
         }
         .back-btn {
-            background: #90a4ae;
+            background: linear-gradient(135deg, #64748b, #475569);
             color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
             text-decoration: none;
-            display: inline-block;
-            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 32px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(100, 116, 139, 0.3);
         }
         .status-result {
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 10px;
+            margin-top: 32px;
+            border-radius: 20px;
             display: none;
+            overflow: hidden;
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
         .status-success {
-            background: #e8f5e8;
-            border: 2px solid #4caf50;
+            background: linear-gradient(135deg, rgba(236, 253, 245, 0.9), rgba(209, 250, 229, 0.8));
+            border-color: rgba(34, 197, 94, 0.3);
         }
         .status-error {
-            background: #ffebee;
-            border: 2px solid #f44336;
+            background: linear-gradient(135deg, rgba(254, 242, 242, 0.9), rgba(254, 226, 226, 0.8));
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .status-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        }
+        .status-success .status-header {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.05));
+        }
+        .status-error .status-header {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
+        }
+        .status-content {
+            padding: 32px;
+        }
+        .patient-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .info-item {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid #3b82f6;
+        }
+        .info-label {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .info-value {
+            font-weight: 600;
+            color: #1e40af;
+            font-size: 1rem;
+        }
+        @media (max-width: 768px) {
+            .container { padding: 24px; }
+            .search-section { padding: 24px; }
+            .patient-info { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -272,19 +677,23 @@ ENHANCED_PATIENT_STATUS_TEMPLATE = '''
     <div class="container">
         <div class="header">
             <h1>🔍 Check Appointment Status</h1>
-            <p>Enter your registration ID to check status</p>
+            <p>Enter your registration ID to check your appointment status</p>
         </div>
         
-        <a href="/patient" class="back-btn">← Back</a>
+        <a href="/patient" class="back-btn">← Back to Patient Portal</a>
         
-        <form id="statusForm">
-            <div class="form-group">
-                <label for="registration_id">Registration ID</label>
-                <input type="text" id="registration_id" name="registration_id" placeholder="e.g., MED123456" required>
-            </div>
-            
-            <button type="submit" class="check-btn">Check Status</button>
-        </form>
+        <div class="search-section">
+            <form id="statusForm">
+                <div class="form-group">
+                    <label for="registration_id">Registration ID</label>
+                    <input type="text" id="registration_id" name="registration_id" placeholder="MED123456" required>
+                </div>
+                
+                <button type="submit" class="check-btn">
+                    🔍 Check Status
+                </button>
+            </form>
+        </div>
         
         <div id="statusResult" class="status-result">
             <!-- Status information will be displayed here -->
@@ -295,7 +704,12 @@ ENHANCED_PATIENT_STATUS_TEMPLATE = '''
         document.getElementById('statusForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const registrationId = document.getElementById('registration_id').value;
+            const registrationId = document.getElementById('registration_id').value.trim().toUpperCase();
+            
+            if (!registrationId) {
+                alert('Please enter a registration ID');
+                return;
+            }
             
             try {
                 const response = await fetch('/api/check_patient_status', {
@@ -313,18 +727,55 @@ ENHANCED_PATIENT_STATUS_TEMPLATE = '''
                     const patient = result.patient;
                     statusDiv.className = 'status-result status-success';
                     statusDiv.innerHTML = `
-                        <h3>✅ Patient Found</h3>
-                        <p><strong>Name:</strong> ${patient.name}</p>
-                        <p><strong>Status:</strong> ${patient.status}</p>
-                        <p><strong>Department:</strong> ${patient.department}</p>
-                        <p><strong>Registered:</strong> ${new Date(patient.registered_date).toLocaleDateString()}</p>
-                        ${patient.appointment_time ? `<p><strong>Appointment:</strong> ${new Date(patient.appointment_time).toLocaleString()}</p>` : ''}
+                        <div class="status-header">
+                            <h3 style="color: #059669; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 12px;">
+                                ✅ Patient Found
+                            </h3>
+                        </div>
+                        <div class="status-content">
+                            <div style="text-align: center; margin-bottom: 24px;">
+                                <h4 style="color: #1e40af; font-size: 1.8rem; font-weight: 700; margin-bottom: 8px;">${patient.name}</h4>
+                                <div style="display: inline-block; padding: 8px 16px; background: rgba(34, 197, 94, 0.1); color: #059669; border-radius: 20px; font-weight: 600; text-transform: capitalize;">
+                                    ${patient.status}
+                                </div>
+                            </div>
+                            <div class="patient-info">
+                                <div class="info-item">
+                                    <div class="info-label">Registration ID</div>
+                                    <div class="info-value">${patient.registration_id}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Department</div>
+                                    <div class="info-value">${patient.department}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Risk Score</div>
+                                    <div class="info-value">${patient.risk_score}/100</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Registered Date</div>
+                                    <div class="info-value">${new Date(patient.registered_date).toLocaleDateString()}</div>
+                                </div>
+                                ${patient.appointment_time ? `
+                                <div class="info-item">
+                                    <div class="info-label">Appointment Time</div>
+                                    <div class="info-value">${new Date(patient.appointment_time).toLocaleString()}</div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
                     `;
                 } else {
                     statusDiv.className = 'status-result status-error';
                     statusDiv.innerHTML = `
-                        <h3>❌ Error</h3>
-                        <p>${result.error}</p>
+                        <div class="status-header">
+                            <h3 style="color: #dc2626; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 12px;">
+                                ❌ Not Found
+                            </h3>
+                        </div>
+                        <div class="status-content">
+                            <p style="color: #991b1b; font-size: 1.1rem; text-align: center;">${result.error}</p>
+                        </div>
                     `;
                 }
                 
@@ -334,11 +785,25 @@ ENHANCED_PATIENT_STATUS_TEMPLATE = '''
                 const statusDiv = document.getElementById('statusResult');
                 statusDiv.className = 'status-result status-error';
                 statusDiv.innerHTML = `
-                    <h3>❌ Network Error</h3>
-                    <p>${error.message}</p>
+                    <div class="status-header">
+                        <h3 style="color: #dc2626; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 12px;">
+                            ❌ Network Error
+                        </h3>
+                    </div>
+                    <div class="status-content">
+                        <p style="color: #991b1b; font-size: 1.1rem; text-align: center;">${error.message}</p>
+                    </div>
                 `;
                 statusDiv.style.display = 'block';
             }
+        });
+        
+        // Auto-focus on registration ID input
+        document.getElementById('registration_id').focus();
+        
+        // Format registration ID as user types
+        document.getElementById('registration_id').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
         });
     </script>
 </body>
@@ -1981,3 +2446,7 @@ ADMIN_SETTINGS_TEMPLATE = '''
 </body>
 </html>
 '''
+
+# Template mappings to ensure enhanced templates are used
+PATIENT_REGISTER_TEMPLATE = ENHANCED_PATIENT_REGISTER_TEMPLATE
+PATIENT_STATUS_TEMPLATE = ENHANCED_PATIENT_STATUS_TEMPLATE
