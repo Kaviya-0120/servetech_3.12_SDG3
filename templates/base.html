@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Telemedicine Queue Optimizer{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Fallback styles in case external CSS fails -->
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .navbar { background: rgba(255,255,255,0.95); padding: 1rem; }
+        .nav-brand { font-size: 1.5rem; font-weight: bold; color: #2c3e50; }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-heartbeat"></i>
+                <span>TeleQueue Pro</span>
+            </div>
+            <div class="nav-links">
+                {% if session.user_type %}
+                    <span class="user-info">
+                        <i class="fas fa-user"></i>
+                        {{ session.name or session.email }}
+                        {% if session.user_type == 'admin' %}
+                            <span class="badge admin-badge">Admin</span>
+                        {% elif session.user_type == 'doctor' %}
+                            <span class="badge doctor-badge">Doctor</span>
+                        {% endif %}
+                    </span>
+                    <a href="{{ url_for('logout') }}" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024 TeleQueue Pro - Decision Support Only</p>
+            <p class="disclaimer">This system provides clinical decision support only. Not for diagnosis or treatment.</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

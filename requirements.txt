@@ -1,0 +1,9 @@
+Flask
+scikit-learn
+numpy
+joblib
+Werkzeug
+pandas
+reportlab
+openpyxl
+fpdf2

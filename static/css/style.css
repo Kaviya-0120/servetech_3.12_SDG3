@@ -1,0 +1,250 @@
+/* ===============================
+   RESET & BASE
+================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background-color: #f4f6fb;
+  color: #1f2937;
+}
+
+/* ===============================
+   GLOBAL CONTAINERS (CARDS)
+================================ */
+.container,
+.form-container,
+.dashboard-box,
+.queue-container,
+.wait-times-section,
+.tab-content,
+.login-card,
+.demo-credentials,
+.admin-tabs,
+.dashboard-header,
+.admin-header {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+}
+
+/* ===============================
+   NAVBAR
+================================ */
+.navbar {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-brand {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logout-btn {
+  padding: 0.5rem 1rem;
+  background: #e74c3c;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+/* ===============================
+   HEADINGS
+================================ */
+h1 {
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+  color: #1e293b;
+}
+
+h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+h3 {
+  font-size: 1.05rem;
+  color: #334155;
+}
+
+/* ===============================
+   FORMS
+================================ */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.65rem;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 0.95rem;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+/* ===============================
+   BUTTONS
+================================ */
+button,
+.submit-btn,
+.login-btn,
+.action-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.4rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover,
+.submit-btn:hover,
+.login-btn:hover,
+.action-btn:hover {
+  background: #1d4ed8;
+}
+
+.admin-btn {
+  background: #e74c3c;
+}
+
+/* ===============================
+   DASHBOARD STATS
+================================ */
+.stat-card {
+  background: #2563eb;
+  color: white;
+  padding: 1rem;
+  border-radius: 10px;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.stat-number {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+/* ===============================
+   PATIENT CARDS
+================================ */
+.patient-card {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.patient-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* ===============================
+   TABLES
+================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+/* ===============================
+   MODALS
+================================ */
+.modal {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+/* ===============================
+   LOGIN
+================================ */
+.login-container {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+/* ===============================
+   FOOTER
+================================ */
+.footer {
+  background: #1e293b;
+  color: white;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 768px) {
+  .nav-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
